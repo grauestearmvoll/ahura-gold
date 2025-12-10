@@ -26,7 +26,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, buyMilyem, sellMilyem, goldBuyPrice, goldSellPrice, unitType, gramPerPiece } = body
+    const { name, buyMilyem, sellMilyem, unitType, gramPerPiece } = body
 
     // Generate product code
     const productCode = `URN-${await getNextCounter('PRODUCT_CODE')}`
@@ -37,8 +37,6 @@ export async function POST(request: Request) {
         name,
         buyMilyem,
         sellMilyem,
-        goldBuyPrice,
-        goldSellPrice,
         unitType,
         gramPerPiece: unitType === 'ADET' ? gramPerPiece : null,
       },

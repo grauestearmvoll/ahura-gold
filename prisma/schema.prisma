@@ -17,8 +17,8 @@ model Product {
   name            String
   buyMilyem       Float    // Alış milyemi (sabit)
   sellMilyem      Float    // Satış milyemi (sabit)
-  goldBuyPrice    Float    // Has altın alış fiyatı (sabit)
-  goldSellPrice   Float    // Has altın satış fiyatı (sabit)
+  goldBuyPrice    Float?   // Has altın alış fiyatı (opsiyonel, işlemde girilir)
+  goldSellPrice   Float?   // Has altın satış fiyatı (opsiyonel, işlemde girilir)
   unitType        String   // "ADET" veya "GRAM"
   gramPerPiece    Float?   // Adet başına gramaj (ADET için)
   createdAt       DateTime @default(now())

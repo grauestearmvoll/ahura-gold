@@ -21,8 +21,6 @@ export default function NewProductPage() {
     name: "",
     buyMilyem: "",
     sellMilyem: "",
-    goldBuyPrice: "",
-    goldSellPrice: "",
     unitType: "GRAM",
     gramPerPiece: "",
   })
@@ -39,8 +37,6 @@ export default function NewProductPage() {
           name: formData.name,
           buyMilyem: parseFloat(formData.buyMilyem),
           sellMilyem: parseFloat(formData.sellMilyem),
-          goldBuyPrice: parseFloat(formData.goldBuyPrice),
-          goldSellPrice: parseFloat(formData.goldSellPrice),
           unitType: formData.unitType,
           gramPerPiece: formData.unitType === "ADET" ? parseFloat(formData.gramPerPiece) : null,
         }),
@@ -106,33 +102,6 @@ export default function NewProductPage() {
                   value={formData.sellMilyem}
                   onChange={(e) => setFormData({ ...formData, sellMilyem: e.target.value })}
                   placeholder="Örn: 0.937"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="goldBuyPrice">Has Altın Alış Fiyatı *</Label>
-                <Input
-                  id="goldBuyPrice"
-                  type="number"
-                  step="0.01"
-                  required
-                  value={formData.goldBuyPrice}
-                  onChange={(e) => setFormData({ ...formData, goldBuyPrice: e.target.value })}
-                  placeholder="Örn: 5890.00"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="goldSellPrice">Has Altın Satış Fiyatı *</Label>
-                <Input
-                  id="goldSellPrice"
-                  type="number"
-                  step="0.01"
-                  required
-                  value={formData.goldSellPrice}
-                  onChange={(e) => setFormData({ ...formData, goldSellPrice: e.target.value })}
-                  placeholder="Örn: 5805.00"
                 />
               </div>
             </div>
