@@ -52,7 +52,7 @@ export default async function StockReportPage() {
     const grams = p.unitType === 'ADET' && p.gramPerPiece 
       ? p.totalStock * p.gramPerPiece 
       : p.totalStock
-    return sum + (grams * p.karat)
+    return sum + (grams * p.buyMilyem)
   }, 0)
 
   const lowStockProducts = productsWithStock.filter(p => p.totalStock < 10)
@@ -141,7 +141,7 @@ export default async function StockReportPage() {
                   const grams = product.unitType === 'ADET' && product.gramPerPiece
                     ? product.totalStock * product.gramPerPiece
                     : product.totalStock
-                  const hasGrams = grams * product.karat
+                  const hasGrams = grams * product.buyMilyem
 
                   return (
                     <TableRow key={product.id}>
@@ -152,7 +152,7 @@ export default async function StockReportPage() {
                           ? `Adet (${product.gramPerPiece}gr)`
                           : 'Gram'}
                       </TableCell>
-                      <TableCell>{product.karat}</TableCell>
+                      <TableCell>{product.buyMilyem}</TableCell>
                       <TableCell className="text-right font-semibold">
                         {product.unitType === 'ADET'
                           ? `${product.totalStock} adet`

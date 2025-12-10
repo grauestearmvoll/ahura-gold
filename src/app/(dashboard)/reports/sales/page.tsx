@@ -51,14 +51,14 @@ export default async function SalesReportPage() {
     const grams = t.product.unitType === 'ADET' && t.product.gramPerPiece 
       ? t.quantity * t.product.gramPerPiece 
       : t.quantity
-    return sum + (grams * t.karat)
+    return sum + (grams * t.milyem)
   }, 0)
 
   const totalPurchasesGrams = purchaseTransactions.reduce((sum, t) => {
     const grams = t.product.unitType === 'ADET' && t.product.gramPerPiece 
       ? t.quantity * t.product.gramPerPiece 
       : t.quantity
-    return sum + (grams * t.karat)
+    return sum + (grams * t.milyem)
   }, 0)
 
   return (
@@ -159,7 +159,7 @@ export default async function SalesReportPage() {
                           ? `${transaction.quantity} adet`
                           : formatGrams(transaction.quantity)}
                       </TableCell>
-                      <TableCell>{transaction.karat}</TableCell>
+                      <TableCell>{transaction.milyem}</TableCell>
                       <TableCell className="text-right font-semibold text-green-600">
                         {formatTL(transaction.totalAmount)}
                       </TableCell>
@@ -208,7 +208,7 @@ export default async function SalesReportPage() {
                           ? `${transaction.quantity} adet`
                           : formatGrams(transaction.quantity)}
                       </TableCell>
-                      <TableCell>{transaction.karat}</TableCell>
+                      <TableCell>{transaction.milyem}</TableCell>
                       <TableCell className="text-right font-semibold text-red-600">
                         {formatTL(transaction.totalAmount)}
                       </TableCell>
