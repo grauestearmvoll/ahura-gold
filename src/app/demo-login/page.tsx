@@ -11,29 +11,19 @@ export default function DemoLoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     
-    try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ password }),
-      })
-      
-      const data = await response.json()
-      
-      if (data.success) {
-        localStorage.setItem("isLoggedIn", "true")
-        router.push("/dashboard")
-      } else {
-        setError(data.error || "Yanlış şifre!")
-      }
-    } catch (error) {
-      setError("Bağlantı hatası!")
+    // Şifreyi kontrol et - production'da ADMIN_PASSWORD env variable'ından gelecek
+    // Development'ta admin123 kullan
+    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "admin123"
+    
+    if (password === correctPassword) {
+      localStorage.setItem("isLoggedIn", "true")
+      router.push("/dashboard")
+    } else {
+      setError("Yanlış şifre!")
     }
   }
 
