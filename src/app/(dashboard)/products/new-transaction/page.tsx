@@ -20,8 +20,8 @@ interface Product {
   name: string
   buyMilyem: number
   sellMilyem: number
-  goldBuyPrice: number
-  goldSellPrice: number
+  goldBuyPrice?: number | null
+  goldSellPrice?: number | null
   unitType: string
   gramPerPiece: number | null
 }
@@ -42,7 +42,13 @@ export default function NewTransactionPage() {
   })
 
   useEffect(() => {
-    fetch("/api/products")
+    // Fetch products with cache busting
+    fetch("/api/products", {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+      }
+    })
       .then((res) => res.json())
       .then((data) => setProducts(data))
   }, [])
@@ -55,8 +61,9 @@ export default function NewTransactionPage() {
       setFormData({
         ...formData,
         productId,
-        goldBuyPrice: product.goldBuyPrice.toString(),
-        goldSellPrice: product.goldSellPrice.toString(),
+        // Gold prices will be entered manually for each transaction
+        goldBuyPrice: product.goldBuyPrice?.toString() || "",
+        goldSellPrice: product.goldSellPrice?.toString() || "",
       })
     }
   }
