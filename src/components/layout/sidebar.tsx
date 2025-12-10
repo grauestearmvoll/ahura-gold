@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { 
   LayoutDashboard, 
@@ -12,7 +12,6 @@ import {
   HandCoins,
   LogOut
 } from "lucide-react"
-import { signOut, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 
 const navigation = [
@@ -26,10 +25,11 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const { data: session } = useSession()
+  const router = useRouter()
 
   const handleLogout = () => {
-    signOut({ callbackUrl: "/login" })
+    localStorage.removeItem("isLoggedIn")
+    router.push("/demo-login")
   }
 
   return (
@@ -58,11 +58,6 @@ export function Sidebar() {
         })}
       </nav>
       <div className="border-t p-4 space-y-3">
-        {session?.user?.email && (
-          <p className="text-xs text-muted-foreground truncate">
-            {session.user.email}
-          </p>
-        )}
         <Button 
           variant="outline" 
           size="sm" 
