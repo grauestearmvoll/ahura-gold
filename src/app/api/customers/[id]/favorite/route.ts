@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { revalidatePath } from "next/cache"
 
 export async function PATCH(
   request: Request,
@@ -14,6 +15,9 @@ export async function PATCH(
       where: { id },
       data: { isFavorite },
     })
+
+    revalidatePath('/customers')
+    revalidatePath('/dashboard')
 
     return NextResponse.json(customer)
   } catch (error) {

@@ -18,7 +18,10 @@ interface Product {
   id: string
   productCode: string
   name: string
-  karat: number
+  buyMilyem: number
+  sellMilyem: number
+  goldBuyPrice: number
+  goldSellPrice: number
   unitType: string
   gramPerPiece: number | null
 }
@@ -32,9 +35,9 @@ export default function NewTransactionPage() {
     transactionType: "ALIS",
     productId: "",
     quantity: "",
-    karat: "",
     goldBuyPrice: "",
     goldSellPrice: "",
+    discountAmount: "0",
     notes: "",
   })
 
@@ -48,12 +51,22 @@ export default function NewTransactionPage() {
     const product = products.find((p) => p.id === productId)
     if (product) {
       setSelectedProduct(product)
+      
       setFormData({
         ...formData,
         productId,
-        karat: product.karat.toString(),
+        goldBuyPrice: product.goldBuyPrice.toString(),
+        goldSellPrice: product.goldSellPrice.toString(),
       })
     }
+  }
+
+  // İşlem türü değiştiğinde güncelle
+  const handleTransactionTypeChange = (type: string) => {
+    setFormData({
+      ...formData,
+      transactionType: type,
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,9 +81,9 @@ export default function NewTransactionPage() {
           transactionType: formData.transactionType,
           productId: formData.productId,
           quantity: parseFloat(formData.quantity),
-          karat: parseFloat(formData.karat),
           goldBuyPrice: parseFloat(formData.goldBuyPrice),
           goldSellPrice: parseFloat(formData.goldSellPrice),
+          discountAmount: parseFloat(formData.discountAmount),
           notes: formData.notes || null,
         }),
       })
@@ -105,7 +118,7 @@ export default function NewTransactionPage() {
               <Label htmlFor="transactionType">İşlem Türü *</Label>
               <Select
                 value={formData.transactionType}
-                onValueChange={(value) => setFormData({ ...formData, transactionType: value })}
+                onValueChange={handleTransactionTypeChange}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -150,8 +163,14 @@ export default function NewTransactionPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Ayar</p>
-                    <p className="font-medium">{selectedProduct.karat}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formData.transactionType === 'ALIS' ? 'Alış Milyemi' : 'Satış Milyemi'}
+                    </p>
+                    <p className="font-medium">
+                      {formData.transactionType === 'ALIS' 
+                        ? selectedProduct.buyMilyem 
+                        : selectedProduct.sellMilyem}
+                    </p>
                   </div>
                   {selectedProduct.unitType === 'ADET' && (
                     <div>
@@ -175,20 +194,6 @@ export default function NewTransactionPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="karat">
-                    {formData.transactionType === 'ALIS' ? 'Alış' : 'Satış'} Milyemi *
-                  </Label>
-                  <Input
-                    id="karat"
-                    type="number"
-                    step="0.001"
-                    required
-                    value={formData.karat}
-                    onChange={(e) => setFormData({ ...formData, karat: e.target.value })}
-                  />
-                </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="goldBuyPrice">Has Altın Alış Fiyatı *</Label>
@@ -199,6 +204,7 @@ export default function NewTransactionPage() {
                       required
                       value={formData.goldBuyPrice}
                       onChange={(e) => setFormData({ ...formData, goldBuyPrice: e.target.value })}
+                      placeholder="Örn: 5890.00"
                     />
                   </div>
                   <div className="space-y-2">
@@ -210,8 +216,28 @@ export default function NewTransactionPage() {
                       required
                       value={formData.goldSellPrice}
                       onChange={(e) => setFormData({ ...formData, goldSellPrice: e.target.value })}
+                      placeholder="Örn: 5805.00"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="discountAmount">
+                    {formData.transactionType === 'ALIS' ? 'Artış/İkram (TL)' : 'İskonto Miktarı (TL)'}
+                  </Label>
+                  <Input
+                    id="discountAmount"
+                    type="number"
+                    step="0.01"
+                    value={formData.discountAmount}
+                    onChange={(e) => setFormData({ ...formData, discountAmount: e.target.value })}
+                    placeholder="0.00"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {formData.transactionType === 'ALIS' 
+                      ? 'Artış/ikram tutarı toplama eklenir' 
+                      : 'İskonto tutarı toplamdan düşülür'}
+                  </p>
                 </div>
 
                 <div className="space-y-2">

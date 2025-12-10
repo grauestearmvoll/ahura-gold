@@ -10,62 +10,109 @@ export default async function DashboardPage() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  // Günlük alış toplamı
+  // Günlük alış işlemleri ve toplam tutarı
   const dailyPurchases = await prisma.productTransaction.findMany({
     where: {
       transactionType: 'ALIS',
       createdAt: { gte: today },
     },
+    include: {
+      product: true,
+    },
   })
+  
+  // Alış toplamı: Her işlem için totalAmount (Gramaj x buyMilyem x goldPrice - İskonto)
   const dailyPurchaseTotal = dailyPurchases.reduce((sum: number, t: any) => sum + t.totalAmount, 0)
 
-  // Günlük satış toplamı
+  // Günlük satış işlemleri ve toplam tutarı
   const dailySales = await prisma.productTransaction.findMany({
     where: {
       transactionType: 'SATIS',
       createdAt: { gte: today },
     },
+    include: {
+      product: true,
+    },
   })
+  
+  // Satış toplamı: Her işlem için totalAmount (Gramaj x sellMilyem x goldPrice - İskonto)
   const dailySaleTotal = dailySales.reduce((sum: number, t: any) => sum + t.totalAmount, 0)
 
-  // Günlük kar/zarar
+  // Günlük kar/zarar: Satış tutarı - Alış tutarı
   const dailyProfit = dailySaleTotal - dailyPurchaseTotal
+
+  // Tüm alış işlemlerini al (stokta olanlar için)
+  const allPurchases = await prisma.productTransaction.findMany({
+    where: {
+      transactionType: 'ALIS',
+    },
+    include: {
+      product: true,
+    },
+  })
+
+  // Tüm satış işlemlerini al
+  const allSales = await prisma.productTransaction.findMany({
+    where: {
+      transactionType: 'SATIS',
+    },
+  })
+
+  // Her ürün için stok hesapla
+  const productStocks = new Map<string, number>()
+  
+  for (const t of allPurchases) {
+    const current = productStocks.get(t.productId) || 0
+    productStocks.set(t.productId, current + t.quantity)
+  }
+  
+  for (const t of allSales) {
+    const current = productStocks.get(t.productId) || 0
+    productStocks.set(t.productId, current - t.quantity)
+  }
+
+  // Gerçekleştirilmemiş kar hesapla
+  let unrealizedProfit = 0
+  
+  for (const purchase of allPurchases) {
+    const remainingStock = productStocks.get(purchase.productId) || 0
+    if (remainingStock > 0) {
+      // Bu alış işleminden kalan stok var mı?
+      let purchaseStock = purchase.quantity
+      
+      // Bu ürünün satışlarını kontrol et
+      const productSales = allSales.filter(s => s.productId === purchase.productId)
+      for (const sale of productSales) {
+        purchaseStock -= sale.quantity
+        if (purchaseStock <= 0) break
+      }
+      
+      if (purchaseStock > 0) {
+        // Stokta kalan miktar için potansiyel kar hesapla
+        let totalGrams = purchaseStock
+        if (purchase.product.unitType === 'ADET' && purchase.product.gramPerPiece) {
+          totalGrams = purchaseStock * purchase.product.gramPerPiece
+        }
+        
+        // Alış maliyeti (gerçekleşen)
+        const purchaseCost = (totalGrams * purchase.milyem * purchase.goldBuyPrice)
+        
+        // Potansiyel satış tutarı (güncel fiyatlarla)
+        const potentialSale = (totalGrams * purchase.product.sellMilyem * purchase.goldSellPrice)
+        
+        unrealizedProfit += (potentialSale - purchaseCost)
+      }
+    }
+  }
+
+  // Gerçekleştirilmemiş kar oranı
+  const totalPurchaseValue = allPurchases.reduce((sum: number, t: any) => sum + t.totalAmount, 0)
+  const unrealizedProfitRate = totalPurchaseValue > 0 ? (unrealizedProfit / totalPurchaseValue) * 100 : 0
 
   // Bekleyen ödemeler
   const pendingPayments = await prisma.payment.count({
     where: {
       status: { in: ['PENDING', 'PARTIAL'] }
-    }
-  })
-
-  // Emanet uyarıları
-  const oneDayAhead = new Date(today)
-  oneDayAhead.setDate(oneDayAhead.getDate() + 1)
-  
-  const fiveDaysAhead = new Date(today)
-  fiveDaysAhead.setDate(fiveDaysAhead.getDate() + 5)
-  
-  const tenDaysAhead = new Date(today)
-  tenDaysAhead.setDate(tenDaysAhead.getDate() + 10)
-
-  const consignmentsDue1Day = await prisma.consignment.count({
-    where: {
-      status: 'ACTIVE',
-      deliveryDate: { lte: oneDayAhead, gte: today }
-    }
-  })
-
-  const consignmentsDue5Days = await prisma.consignment.count({
-    where: {
-      status: 'ACTIVE',
-      deliveryDate: { lte: fiveDaysAhead, gte: today }
-    }
-  })
-
-  const consignmentsDue10Days = await prisma.consignment.count({
-    where: {
-      status: 'ACTIVE',
-      deliveryDate: { lte: tenDaysAhead, gte: today }
     }
   })
 
@@ -114,10 +161,28 @@ export default async function DashboardPage() {
             <div className={`text-2xl font-bold ${dailyProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {formatTL(Math.abs(dailyProfit))}
             </div>
-            <p className="text-xs text-muted-foreground">Türk Lirası</p>
+            <p className="text-xs text-muted-foreground">Gerçekleşen</p>
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Gerçekleştirilmemiş Kar</CardTitle>
+            <PackageIcon className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${unrealizedProfit >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+              {formatTL(Math.abs(unrealizedProfit))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              %{unrealizedProfitRate.toFixed(2)} Oran
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Ek Bilgiler */}
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Bekleyen Ödemeler</CardTitle>
@@ -126,51 +191,6 @@ export default async function DashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">{pendingPayments}</div>
             <p className="text-xs text-muted-foreground">Toplam işlem</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Emanet Uyarıları */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">
-              1 Gün İçinde Teslim
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <p className="text-3xl font-bold">{consignmentsDue1Day}</p>
-              <p className="text-xs text-muted-foreground mt-1">Emanet kaydı</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">
-              5 Gün İçinde Teslim
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <p className="text-3xl font-bold">{consignmentsDue5Days}</p>
-              <p className="text-xs text-muted-foreground mt-1">Emanet kaydı</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">
-              10 Gün İçinde Teslim
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <p className="text-3xl font-bold">{consignmentsDue10Days}</p>
-              <p className="text-xs text-muted-foreground mt-1">Emanet kaydı</p>
-            </div>
           </CardContent>
         </Card>
       </div>
@@ -194,7 +214,12 @@ export default async function DashboardPage() {
                     <p className="text-sm text-muted-foreground">{customer.customerCode}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{formatGrams(customer.balance)}</p>
+                    <p className="font-medium">
+                      {customer.balanceCurrency 
+                        ? `${customer.balance.toFixed(2)} ${customer.balanceCurrency}`
+                        : formatGrams(customer.balance)
+                      }
+                    </p>
                     <p className="text-sm text-muted-foreground">{customer.phone}</p>
                   </div>
                 </div>

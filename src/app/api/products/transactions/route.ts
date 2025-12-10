@@ -15,7 +15,7 @@ async function getNextCounter(name: string): Promise<string> {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { transactionType, productId, quantity, karat, goldBuyPrice, goldSellPrice, notes } = body
+    const { transactionType, productId, quantity, goldBuyPrice, goldSellPrice, discountAmount = 0, notes } = body
 
     // Get product details
     const product = await prisma.product.findUnique({
@@ -32,13 +32,22 @@ export async function POST(request: Request) {
       totalGrams = quantity * product.gramPerPiece
     }
 
-    // Calculate total amount in gold grams
-    const totalGramsHas = totalGrams * karat
+    // Get milyem based on transaction type
+    const milyem = transactionType === 'ALIS' ? product.buyMilyem : product.sellMilyem
+    
+    // Get gold price based on transaction type
+    const goldPrice = transactionType === 'ALIS' ? goldBuyPrice : goldSellPrice
     
     // Calculate total amount in TL
-    const totalAmountTL = transactionType === 'ALIS'
-      ? totalGramsHas * goldBuyPrice
-      : totalGramsHas * goldSellPrice
+    // ALIS: Gramaj x Milyem x Has Fiyatı + Artış/İkram
+    // SATIS: Gramaj x Milyem x Has Fiyatı - İskonto
+    let totalAmountTL = totalGrams * milyem * goldPrice
+    
+    if (transactionType === 'ALIS') {
+      totalAmountTL = totalAmountTL + discountAmount // Artış/İkram eklenir
+    } else {
+      totalAmountTL = totalAmountTL - discountAmount // İskonto düşülür
+    }
 
     // Get current stock
     const stockTransactions = await prisma.productTransaction.findMany({
@@ -69,9 +78,10 @@ export async function POST(request: Request) {
         transactionType,
         productId,
         quantity,
-        karat,
+        milyem,
         goldBuyPrice,
         goldSellPrice,
+        discountAmount,
         totalAmount: totalAmountTL,
         remainingStock: newStock,
         notes,

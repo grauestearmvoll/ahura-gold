@@ -69,9 +69,17 @@ export default async function TransactionDetailPage({
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Milyem</p>
-              <p className="font-medium">{transaction.karat}</p>
+              <p className="text-sm text-muted-foreground">
+                {transaction.transactionType === 'ALIS' ? 'Alış Milyemi' : 'Satış Milyemi'}
+              </p>
+              <p className="font-medium">{transaction.milyem}</p>
             </div>
+            {transaction.product.unitType === 'ADET' && transaction.product.gramPerPiece && (
+              <div>
+                <p className="text-sm text-muted-foreground">Toplam Gramaj</p>
+                <p className="font-medium">{formatGrams(transaction.quantity * transaction.product.gramPerPiece)}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -89,8 +97,12 @@ export default async function TransactionDetailPage({
               <p className="font-medium">{transaction.product.name}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Ürün Ayarı</p>
-              <p className="font-medium">{transaction.product.karat}</p>
+              <p className="text-sm text-muted-foreground">Alış Milyemi</p>
+              <p className="font-medium">{transaction.product.buyMilyem}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Satış Milyemi</p>
+              <p className="font-medium">{transaction.product.sellMilyem}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Kalan Stok</p>
@@ -109,16 +121,26 @@ export default async function TransactionDetailPage({
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-sm text-muted-foreground">Has Altın Alış Fiyatı</p>
+              <p className="text-sm text-muted-foreground">Has Altın Alış Fiyatı (İşlem)</p>
               <p className="font-medium">₺{transaction.goldBuyPrice.toFixed(2)}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Has Altın Satış Fiyatı</p>
+              <p className="text-sm text-muted-foreground">Has Altın Satış Fiyatı (İşlem)</p>
               <p className="font-medium">₺{transaction.goldSellPrice.toFixed(2)}</p>
             </div>
+            {transaction.discountAmount > 0 && (
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  {transaction.transactionType === 'ALIS' ? 'Artış/İkram' : 'İskonto'}
+                </p>
+                <p className={`font-medium ${transaction.transactionType === 'ALIS' ? 'text-green-600' : 'text-red-600'}`}>
+                  {transaction.transactionType === 'ALIS' ? '+' : '-'}₺{transaction.discountAmount.toFixed(2)}
+                </p>
+              </div>
+            )}
             <div>
               <p className="text-sm text-muted-foreground">Toplam Tutar</p>
-              <p className="font-medium text-lg">{formatGrams(transaction.totalAmount)}</p>
+              <p className="font-medium text-lg">₺{transaction.totalAmount.toFixed(2)}</p>
             </div>
           </CardContent>
         </Card>
@@ -141,11 +163,11 @@ export default async function TransactionDetailPage({
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Ödenen</p>
-                <p className="font-medium">{formatGrams(transaction.payment.paidAmount)}</p>
+                <p className="font-medium">₺{transaction.payment.paidAmount.toFixed(2)}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Kalan</p>
-                <p className="font-medium">{formatGrams(transaction.payment.remainingAmount)}</p>
+                <p className="font-medium">₺{transaction.payment.remainingAmount.toFixed(2)}</p>
               </div>
               {transaction.payment.status !== 'COMPLETED' && (
                 <Link href={`/payments/${transaction.payment.id}`}>

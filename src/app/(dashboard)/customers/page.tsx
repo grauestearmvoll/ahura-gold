@@ -76,7 +76,10 @@ export default async function CustomersPage() {
                     <TableCell>{customer.phone || "-"}</TableCell>
                     <TableCell className="text-right">
                       <span className={customer.balance > 0 ? "text-green-600 font-semibold" : customer.balance < 0 ? "text-red-600 font-semibold" : ""}>
-                        {formatGrams(customer.balance)}
+                        {customer.balanceCurrency 
+                          ? `${customer.balance.toFixed(2)} ${customer.balanceCurrency}`
+                          : formatGrams(customer.balance)
+                        }
                       </span>
                     </TableCell>
                     <TableCell className="text-right">

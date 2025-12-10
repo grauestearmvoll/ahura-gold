@@ -34,10 +34,7 @@ export default async function PaymentsPage() {
 
   const completedPayments = await prisma.payment.findMany({
     where: {
-      OR: [
-        { status: 'COMPLETED' },
-        { status: 'PARTIAL', paidAmount: { gt: 0 } }
-      ]
+      status: 'COMPLETED'
     },
     include: {
       productTransaction: {

@@ -19,7 +19,10 @@ export default function NewProductPage() {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
-    karat: "",
+    buyMilyem: "",
+    sellMilyem: "",
+    goldBuyPrice: "",
+    goldSellPrice: "",
     unitType: "GRAM",
     gramPerPiece: "",
   })
@@ -34,7 +37,10 @@ export default function NewProductPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.name,
-          karat: parseFloat(formData.karat),
+          buyMilyem: parseFloat(formData.buyMilyem),
+          sellMilyem: parseFloat(formData.sellMilyem),
+          goldBuyPrice: parseFloat(formData.goldBuyPrice),
+          goldSellPrice: parseFloat(formData.goldSellPrice),
           unitType: formData.unitType,
           gramPerPiece: formData.unitType === "ADET" ? parseFloat(formData.gramPerPiece) : null,
         }),
@@ -77,20 +83,62 @@ export default function NewProductPage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="karat">Ayar (Milyem) *</Label>
-              <Input
-                id="karat"
-                type="number"
-                step="0.001"
-                required
-                value={formData.karat}
-                onChange={(e) => setFormData({ ...formData, karat: e.target.value })}
-                placeholder="Örn: 0.916"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="buyMilyem">Alış Milyemi *</Label>
+                <Input
+                  id="buyMilyem"
+                  type="number"
+                  step="0.001"
+                  required
+                  value={formData.buyMilyem}
+                  onChange={(e) => setFormData({ ...formData, buyMilyem: e.target.value })}
+                  placeholder="Örn: 0.914"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sellMilyem">Satış Milyemi *</Label>
+                <Input
+                  id="sellMilyem"
+                  type="number"
+                  step="0.001"
+                  required
+                  value={formData.sellMilyem}
+                  onChange={(e) => setFormData({ ...formData, sellMilyem: e.target.value })}
+                  placeholder="Örn: 0.937"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="goldBuyPrice">Has Altın Alış Fiyatı *</Label>
+                <Input
+                  id="goldBuyPrice"
+                  type="number"
+                  step="0.01"
+                  required
+                  value={formData.goldBuyPrice}
+                  onChange={(e) => setFormData({ ...formData, goldBuyPrice: e.target.value })}
+                  placeholder="Örn: 5890.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="goldSellPrice">Has Altın Satış Fiyatı *</Label>
+                <Input
+                  id="goldSellPrice"
+                  type="number"
+                  step="0.01"
+                  required
+                  value={formData.goldSellPrice}
+                  onChange={(e) => setFormData({ ...formData, goldSellPrice: e.target.value })}
+                  placeholder="Örn: 5805.00"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="unitType">İşlem Türü *</Label>
               <Label htmlFor="unitType">İşlem Türü *</Label>
               <Select
                 value={formData.unitType}

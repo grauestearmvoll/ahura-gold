@@ -15,7 +15,10 @@ model Product {
   id              String   @id @default(cuid())
   productCode     String   @unique
   name            String
-  karat           Float    // Ayar (milyem)
+  buyMilyem       Float    // Alış milyemi (sabit)
+  sellMilyem      Float    // Satış milyemi (sabit)
+  goldBuyPrice    Float    // Has altın alış fiyatı (sabit)
+  goldSellPrice   Float    // Has altın satış fiyatı (sabit)
   unitType        String   // "ADET" veya "GRAM"
   gramPerPiece    Float?   // Adet başına gramaj (ADET için)
   createdAt       DateTime @default(now())
@@ -32,10 +35,11 @@ model ProductTransaction {
   transactionType    String   // "ALIS" veya "SATIS"
   productId          String
   quantity           Float    // Miktar (gram veya adet)
-  karat              Float    // İşlem anındaki milyem
-  goldBuyPrice       Float    // Has altın alış fiyatı
-  goldSellPrice      Float    // Has altın satış fiyatı
-  totalAmount        Float    // Toplam tutar (gram cinsinden)
+  milyem             Float    // İşlem anındaki milyem (alış için buyMilyem, satış için sellMilyem)
+  goldBuyPrice       Float    // Has altın alış fiyatı (işlem anında)
+  goldSellPrice      Float    // Has altın satış fiyatı (işlem anında)
+  discountAmount     Float    @default(0) // İskonto miktarı
+  totalAmount        Float    // Toplam tutar (TL)
   remainingStock     Float    // İşlem sonrası kalan stok
   notes              String?
   createdAt          DateTime @default(now())
@@ -70,7 +74,6 @@ model Consignment {
   customer           Customer  @relation(fields: [customerId], references: [id])
   product            Product?  @relation(fields: [productId], references: [id])
 }
-
 // Müşteri - Customer
 model Customer {
   id                 String        @id @default(cuid())
@@ -79,6 +82,7 @@ model Customer {
   tcNo               String?       // TC Kimlik No
   phone              String
   balance            Float         @default(0) // Bakiye (has altın gramı cinsinden)
+  balanceCurrency    String?       // Bakiye para birimi (TL, DOLAR, EURO) - altın ise null
   isFavorite         Boolean       @default(false) // Dashboard'da gösterim için
   notes              String?
   createdAt          DateTime      @default(now())

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { revalidatePath } from "next/cache"
 
 export async function POST(
   request: Request,
@@ -35,13 +36,13 @@ export async function POST(
     // Update payment
     const newPaidAmount = payment.paidAmount + amount
     const newRemainingAmount = payment.totalAmount - newPaidAmount
-    const newStatus = newRemainingAmount <= 0 ? 'COMPLETED' : isPartial ? 'PARTIAL' : 'PENDING'
+    const newStatus = newRemainingAmount <= 0.01 ? 'COMPLETED' : 'PARTIAL'
 
     await prisma.payment.update({
       where: { id },
       data: {
         paidAmount: newPaidAmount,
-        remainingAmount: newRemainingAmount,
+        remainingAmount: Math.max(0, newRemainingAmount),
         status: newStatus,
         paymentMethod: paymentMethod,
         bankName,
@@ -50,6 +51,8 @@ export async function POST(
         eftQueryNo,
       },
     })
+
+    revalidatePath('/payments')
 
     return NextResponse.json({ success: true })
   } catch (error) {
