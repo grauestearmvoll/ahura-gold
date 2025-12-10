@@ -11,15 +11,29 @@ export default function DemoLoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
     
-    // Şifre: admin123
-    if (password === "admin123") {
-      localStorage.setItem("isLoggedIn", "true")
-      router.push("/dashboard")
-    } else {
-      setError("Yanlış şifre!")
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password }),
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        localStorage.setItem("isLoggedIn", "true")
+        router.push("/dashboard")
+      } else {
+        setError(data.error || "Yanlış şifre!")
+      }
+    } catch (error) {
+      setError("Bağlantı hatası!")
     }
   }
 
