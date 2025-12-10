@@ -14,7 +14,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-export const revalidate = 30
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function ConsignmentsPage() {
   const consignments = await prisma.consignment.findMany({

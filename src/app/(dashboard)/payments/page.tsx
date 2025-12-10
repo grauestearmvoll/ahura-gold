@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export const revalidate = 30 // Revalidate every 30 seconds
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function PaymentsPage() {
   const pendingPayments = await prisma.payment.findMany({

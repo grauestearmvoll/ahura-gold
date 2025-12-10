@@ -4,7 +4,8 @@ import { ArrowUpIcon, ArrowDownIcon, PackageIcon, AlertCircle } from "lucide-rea
 import { prisma } from "@/lib/prisma"
 import { formatTL, formatGrams } from "@/lib/utils"
 
-export const revalidate = 60 // Revalidate every 60 seconds
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function DashboardPage() {
   const today = new Date()

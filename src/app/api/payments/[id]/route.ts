@@ -53,6 +53,8 @@ export async function POST(
     })
 
     revalidatePath('/payments')
+    revalidatePath('/dashboard')
+    revalidatePath('/reports/financial')
 
     return NextResponse.json({ success: true })
   } catch (error) {

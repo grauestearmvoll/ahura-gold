@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 
 // Get next counter value
@@ -44,6 +45,10 @@ export async function POST(request: Request) {
         gramPerPiece: unitType === 'ADET' ? gramPerPiece : null,
       },
     })
+
+    // Revalidate pages that list products
+    revalidatePath('/products')
+    revalidatePath('/products/new-transaction')
 
     return NextResponse.json(product)
   } catch (error) {

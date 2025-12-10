@@ -14,7 +14,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-export const revalidate = 30 // Revalidate every 30 seconds
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 const transactionTypeLabels = {
   ALIS: "Alış",

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 
 // Get next counter value
@@ -40,6 +41,9 @@ export async function POST(request: Request) {
         notes: notes || null,
       },
     })
+
+    revalidatePath('/customers')
+    revalidatePath('/reports/customers')
 
     return NextResponse.json(customer)
   } catch (error) {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 
 // Get next counter value
@@ -99,6 +100,13 @@ export async function POST(request: Request) {
         status: 'PENDING',
       },
     })
+
+    // Revalidate the products page to show new transaction immediately
+    revalidatePath('/products')
+    revalidatePath('/dashboard')
+    revalidatePath('/reports/sales')
+    revalidatePath('/reports/stock')
+    revalidatePath('/reports/financial')
 
     return NextResponse.json(transaction)
   } catch (error) {

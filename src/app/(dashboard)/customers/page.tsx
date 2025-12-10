@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/table"
 import { FavoriteButton } from "@/components/favorite-button"
 
-export const revalidate = 30 // Revalidate every 30 seconds
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function CustomersPage() {
   const customers = await prisma.customer.findMany({
