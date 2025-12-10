@@ -1,15 +1,26 @@
 "use client"
 
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function DemoLoginPage() {
   const router = useRouter()
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
 
-  const handleLogin = () => {
-    // Demo için session yokmuş gibi direkt dashboard'a yönlendir
-    router.push("/dashboard")
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Şifre: admin123
+    if (password === "admin123") {
+      localStorage.setItem("isLoggedIn", "true")
+      router.push("/dashboard")
+    } else {
+      setError("Yanlış şifre!")
+    }
   }
 
   return (
@@ -19,20 +30,31 @@ export default function DemoLoginPage() {
           <div className="mb-4 text-4xl">💰</div>
           <CardTitle className="text-2xl font-bold">Ahura Gold ERP</CardTitle>
           <CardDescription>
-            Demo Giriş (Email sistemi düzeltilecek)
+            Sisteme giriş yapın
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <Button 
-            className="w-full" 
-            size="lg"
-            onClick={handleLogin}
-          >
-            Sisteme Giriş Yap
-          </Button>
-          <p className="text-xs text-center text-muted-foreground">
-            Email sistemi aktif edilene kadar bu sayfayı kullanabilirsiniz
-          </p>
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                type="password"
+                placeholder="Şifre"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full"
+              />
+              {error && (
+                <p className="text-sm text-red-600">{error}</p>
+              )}
+            </div>
+            <Button 
+              type="submit"
+              className="w-full" 
+              size="lg"
+            >
+              Giriş Yap
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
