@@ -88,7 +88,7 @@ export async function PATCH(
       totalGrams = quantity * product.gramPerPiece
     }
 
-    const totalGramsHas = totalGrams * transaction.karat
+    const totalGramsHas = totalGrams * transaction.milyem
     const priceToUse = transaction.transactionType === "ALIS" ? goldBuyPrice : goldSellPrice
     const totalAmountTL = totalGramsHas * priceToUse
 
