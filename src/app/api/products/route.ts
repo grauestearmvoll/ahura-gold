@@ -1,17 +1,10 @@
 import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
-
-// Get next counter value
-async function getNextCounter(name: string): Promise<string> {
-  const counter = await prisma.counter.upsert({
-    where: { name },
-    update: { value: { increment: 1 } },
-    create: { name, value: 1 },
-  })
-  
-  return counter.value.toString().padStart(6, '0')
-}
+import { validateProduct, ValidationError } from "@/lib/validations"
+import { getNextCounter, formatErrorResponse } from "@/lib/business-logic"
+import { CODE_PREFIXES, COUNTER_NAMES, ERROR_MESSAGES } from "@/lib/constants"
+import type { CreateProductRequest } from "@/types"
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -21,24 +14,38 @@ export async function GET() {
     const products = await prisma.product.findMany({
       orderBy: { createdAt: 'desc' },
     })
-    return NextResponse.json(products)
+    return NextResponse.json({ data: products })
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 })
+    console.error('Failed to fetch products:', error)
+    const errorResponse = formatErrorResponse(error, ERROR_MESSAGES.DATABASE_ERROR)
+    return NextResponse.json(errorResponse, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    // Parse and validate request body
+    const body: CreateProductRequest = await request.json()
+    
+    // Validate input
+    const validation = validateProduct(body)
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.INVALID_INPUT, errors: validation.errors },
+        { status: 400 }
+      )
+    }
+
     const { name, buyMilyem, sellMilyem, unitType, gramPerPiece } = body
 
     // Generate product code
-    const productCode = `URN-${await getNextCounter('PRODUCT_CODE')}`
+    const productCode = `${CODE_PREFIXES.PRODUCT}-${await getNextCounter(COUNTER_NAMES.PRODUCT_CODE)}`
 
+    // Create product
     const product = await prisma.product.create({
       data: {
         productCode,
-        name,
+        name: name.trim(),
         buyMilyem,
         sellMilyem,
         unitType,
@@ -46,12 +53,22 @@ export async function POST(request: Request) {
       },
     })
 
-    // Revalidate pages that list products
+    // Revalidate pages
     revalidatePath('/products')
     revalidatePath('/products/new-transaction')
 
-    return NextResponse.json(product)
+    return NextResponse.json({ data: product }, { status: 201 })
   } catch (error) {
-    return NextResponse.json({ error: "Failed to create product" }, { status: 500 })
+    console.error('Failed to create product:', error)
+    
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { error: error.message, errors: error.errors },
+        { status: 400 }
+      )
+    }
+
+    const errorResponse = formatErrorResponse(error, ERROR_MESSAGES.SERVER_ERROR)
+    return NextResponse.json(errorResponse, { status: 500 })
   }
 }
